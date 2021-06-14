@@ -4,7 +4,9 @@ from roipool2 import *
 from models import *
 from utils.utils import *
 from utils.datasets import *
+from video_capture import BufferlessVideoCapture
 
+import serial
 import os
 import sys
 import time
@@ -61,12 +63,17 @@ if __name__ == "__main__":
     parser.add_argument("--n_cpu", type=int, default=0, help="number of cpu threads to use during batch generation")
     parser.add_argument("--img_size", type=int, default=416, help="size of each image dimension")
     parser.add_argument("--checkpoint_model", type=str, help="path to checkpoint model")
+    parser.add_argument("--target_object", type=int, default=0)
     opt = parser.parse_args()
     print(opt)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     os.makedirs("output", exist_ok=True)
+
+    sclient = serial.Serial(port='/dev/ttyAMA0', baudrate=115200, timeout=0.1)
+    if sclient.isOpen():
+        print('Serial is Open')
 
     # Set up model
     model = Darknet(opt.model_def, img_size=opt.img_size).to(device)
@@ -98,8 +105,8 @@ if __name__ == "__main__":
 
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
 
-
-    cap = cv2.VideoCapture('data/cafe_distance/videos/output17.avi')
+    cap = BufferlessVideoCapture(0)
+    # cap = cv2.VideoCapture('data/cafe_distance/videos/output17.avi')
     colors = np.random.randint(0, 255, size=(len(classes), 3), dtype="uint8")
     a=[]
     time_begin = time.time()
@@ -108,6 +115,7 @@ if __name__ == "__main__":
     fourcc = cv2.VideoWriter_fourcc('D', 'I', 'V', 'X')
     out = cv2.VideoWriter('output/distance3.avi', fourcc, 30, (640,480))
 
+    mode = 0
     while cap.isOpened():
         ret, img = cap.read()
         if ret is False:
@@ -165,11 +173,37 @@ if __name__ == "__main__":
                     unique_labels = detections[:, -1].cpu().unique()
                     n_cls_preds = len(unique_labels)
                     for i, (x1, y1, x2, y2, conf, cls_conf, cls_pred) in enumerate(detections):
-                        box_w = x2 - x1
+                        if(classes[int(cls_pred)] == opt.target_object):
+
+                            target_distance = float(outputs[i])
+                            if(mode == 0):
+                                if target_distance > 8:
+                                    sclient.write(serial.to_bytes([int('1', 16)]))
+                                    break
+                                else:
+                                    mode = 1
+                                    break
+                            elif(mode == 1):
+                                box_w = x2 - x1
+                                target_location = int(x1+box_w/2)
+                                if target_location < 300:
+                                    sclient.write(serial.to_bytes([int('2', 16)]))
+                                    break
+                                elif target_location > 340:
+                                    sclient.write(serial.to_bytes([int('3', 16)]))
+                                    break
+                                else:
+                                    sclient.write(serial.to_bytes([int('4', 16)]))
+                                    break
+                        
+
+
+
+                        #box_w = x2 - x1
                         # print(box_w)
-                        box_h = y2 - y1
+                        #box_h = y2 - y1
                         # print(y2, y1)
-                        color = [int(c) for c in colors[int(cls_pred)]]
+                        # color = [int(c) for c in colors[int(cls_pred)]]
                         #print(cls_conf)
                         # img = cv2.rectangle(img, (x1, y1 + box_h), (x2, y1), color, 2)
 
@@ -193,6 +227,7 @@ if __name__ == "__main__":
     time_total = time_end - time_begin
     print(NUM // time_total)
 
+    sclient.close()
     cap.release()
     out.release()
     cv2.destroyAllWindows()
