@@ -90,7 +90,7 @@ class ROIPool(nn.Module):
         
             output = self.maxpool(output)
             
-            output = output.view(1, -1).cuda()
+            output = output.view(1, -1)
             # print(output)
             roi_results.append(output)
         return roi_results
@@ -108,7 +108,7 @@ class ROIPool(nn.Module):
 
             output = x[:, :, y1_scale:y2_scale+1, x1_scale:x2_scale+1]
             output = self.maxpool(output)
-            output = output.view(1, -1).cuda()
+            output = output.view(1, -1)
             roi_results.append(output)
         return roi_results
 
@@ -214,7 +214,7 @@ class ROIPool(nn.Module):
             output = self.fc2(output)
             output = self.fc3(output)
             output = self.softplus(output)
-            print(f'output = {output}')
+            # print(f'output = {output}')
             
 
             return output

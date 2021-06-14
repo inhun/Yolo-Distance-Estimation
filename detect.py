@@ -84,7 +84,7 @@ if __name__ == "__main__":
     model.eval()  # Set in evaluation mode
 
     model_distance = ROIPool((3, 3)).to(device)
-    model_distance.load_state_dict(torch.load('checkpoints_distance11/tiny1_340.pth'))
+    model_distance.load_state_dict(torch.load('checkpoints_distance11/tiny1_340.pth', map_location=device))
     model_distance.eval()
 
     dataloader = DataLoader(
@@ -139,17 +139,17 @@ if __name__ == "__main__":
 
             
             detections = non_max_suppression(detections, opt.conf_thres, opt.nms_thres)
-            print(f'none test = {detections}')
+            # print(f'none test = {detections}')
             
             
 
         a.clear()
         if detections is not None and detections[0] is not None:
-            print(detections)
+            # print(detections)
             featuremap = Variable(featuremap.to(device))
             detects = Variable(detections[0], requires_grad=False)
-            print(f'detects = {detects}')
-            print(f'featuremap = {featuremap.shape}')
+            # print(f'detects = {detects}')
+            # print(f'featuremap = {featuremap.shape}')
             outputs = model_distance(featuremap, detects)
             print(f'distance = {outputs}')
             
@@ -158,7 +158,7 @@ if __name__ == "__main__":
             for  detections in a:
                 
                 if detections is not None:
-                    print(detections)
+                    # print(detections)
 
                     detections = rescale_boxes(detections, opt.img_size, RGBimg.shape[:2])
                     # print(detections)
@@ -171,11 +171,11 @@ if __name__ == "__main__":
                         # print(y2, y1)
                         color = [int(c) for c in colors[int(cls_pred)]]
                         #print(cls_conf)
-                        img = cv2.rectangle(img, (x1, y1 + box_h), (x2, y1), color, 2)
+                        # img = cv2.rectangle(img, (x1, y1 + box_h), (x2, y1), color, 2)
 
                         # cv2.putText(img, classes[int(cls_pred)], (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-                        cv2.putText(img, str("%.2f" % float(outputs[i])), (x2, y2 - box_h), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                                    color, 2)
+                        # cv2.putText(img, str("%.2f" % float(outputs[i])), (x2, y2 - box_h), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                                   #  color, 2)
                         
                         # print(classes[int(cls_pred)], int(x1+box_w/2), int(480-(y1+box_h/2)))
 
@@ -183,8 +183,8 @@ if __name__ == "__main__":
             #print()
         #cv2.putText(img,"Hello World!",(400,50),cv2.FONT_HERSHEY_PLAIN,2.0,(0,0,255),2)
 
-        cv2.imshow('frame', changeRGB2BGR(RGBimg))
-        out.write(changeRGB2BGR(RGBimg))
+        # cv2.imshow('frame', changeRGB2BGR(RGBimg))
+        # out.write(changeRGB2BGR(RGBimg))
         #cv2.waitKey(0)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
