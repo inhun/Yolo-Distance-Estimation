@@ -1,0 +1,8 @@
+classes=5
+train=data/testdata/train.txt
+valid=data/testdata/valid.txt
+names=data/testdata/classes.names
+
+
+
+

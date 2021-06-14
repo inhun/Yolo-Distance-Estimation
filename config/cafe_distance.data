@@ -1,0 +1,8 @@
+classes=5
+train=data/cafe_distance/train.txt
+valid=data/cafe_distance/valid.txt
+names=data/cafe_distance/classes.names
+
+
+
+
